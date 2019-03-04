@@ -11,8 +11,10 @@ import java.util.Set;
 import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.RenderUtils;
+import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.minihud.config.Configs;
 import fi.dy.masa.minihud.config.InfoToggle;
+import fi.dy.masa.minihud.config.RendererToggle;
 import fi.dy.masa.minihud.mixin.IMixinWorldRenderer;
 import fi.dy.masa.minihud.renderer.OverlayRenderer;
 import fi.dy.masa.minihud.util.DataStorage;
@@ -25,6 +27,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemMap;
+import net.minecraft.item.ItemStack;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.IProperty;
 import net.minecraft.util.EnumFacing;
@@ -32,6 +36,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.IRegistry;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.DifficultyInstance;
@@ -91,7 +96,7 @@ public class RenderHandler implements IRenderer
             mc.gameSettings.showDebugInfo == false &&
             mc.player != null &&
             (Configs.Generic.REQUIRE_SNEAK.getBooleanValue() == false || mc.player.isSneaking()) &&
-            (Configs.Generic.REQUIRED_KEY.getKeybind().isValid() == false || Configs.Generic.REQUIRED_KEY.getKeybind().isKeybindHeld()))
+            Configs.Generic.REQUIRED_KEY.getKeybind().isKeybindHeld())
         {
             if (InfoToggle.FPS.getBooleanValue())
             {
@@ -120,11 +125,27 @@ public class RenderHandler implements IRenderer
     }
 
     @Override
+    public void onRenderTooltipLast(ItemStack stack, int x, int y)
+    {
+        if (stack.getItem() instanceof ItemMap)
+        {
+            if (Configs.Generic.MAP_PREVIEW.getBooleanValue())
+            {
+                fi.dy.masa.malilib.render.RenderUtils.renderMapPreview(stack, x, y, Configs.Generic.MAP_PREVIEW_SIZE.getIntegerValue());
+            }
+        }
+        else if (Configs.Generic.SHULKER_BOX_PREVIEW.getBooleanValue())
+        {
+            fi.dy.masa.malilib.render.RenderUtils.renderShulkerBoxPreview(stack, x, y, Configs.Generic.SHULKER_DISPLAY_BACKGROUND_COLOR.getBooleanValue());
+        }
+    }
+
+    @Override
     public void onRenderWorldLast(float partialTicks)
     {
         Minecraft mc = Minecraft.getInstance();
 
-        if (Configs.Generic.ENABLED.getBooleanValue() && mc.player != null)
+        if (Configs.Generic.ENABLED.getBooleanValue() && mc.world != null && mc.player != null)
         {
             OverlayRenderer.renderOverlays(mc, partialTicks);
         }
@@ -153,11 +174,10 @@ public class RenderHandler implements IRenderer
     private void updateFps()
     {
         this.fpsCounter++;
-        long time = System.currentTimeMillis();
 
-        if (time >= (this.fpsUpdateTime + 1000L))
+        if (System.currentTimeMillis() >= (this.fpsUpdateTime + 1000L))
         {
-            this.fpsUpdateTime = time;
+            this.fpsUpdateTime = System.currentTimeMillis();
             this.fps = this.fpsCounter;
             this.fpsCounter = 0;
         }
@@ -171,6 +191,11 @@ public class RenderHandler implements IRenderer
                 mc.world.getGameTime() % Configs.Generic.SPAWNABLE_SUB_CHUNK_CHECK_INTERVAL.getIntegerValue() == 0)
             {
                 DataStorage.getInstance().checkQueuedDirtyChunkHeightmaps();
+            }
+
+            if (RendererToggle.OVERLAY_STRUCTURE_MAIN_TOGGLE.getBooleanValue() && (mc.world.getGameTime() % 20) == 0)
+            {
+                DataStorage.getInstance().updateStructureData();
             }
         }
     }
@@ -272,9 +297,10 @@ public class RenderHandler implements IRenderer
                 long timeDay = (int) world.getDayTime();
                 int day = (int) (timeDay / 24000) + 1;
                 // 1 tick = 3.6 seconds in MC (0.2777... seconds IRL)
-                int hour = (int) ((timeDay / 1000) + 6) % 24;
-                int min = (int) (timeDay / 16.666666) % 60;
-                int sec = (int) (timeDay / 0.277777) % 60;
+                int dayTicks = (int) (timeDay % 24000);
+                int hour = (int) ((dayTicks / 1000) + 6) % 24;
+                int min = (int) (dayTicks / 16.666666) % 60;
+                int sec = (int) (dayTicks / 0.277777) % 60;
 
                 String str = Configs.Generic.DATE_FORMAT_MINECRAFT.getStringValue();
                 str = str.replace("{DAY}",  String.format("%d", day));
@@ -417,6 +443,13 @@ public class RenderHandler implements IRenderer
             this.addLine(String.format("Block: %d, %d, %d within Sub-Chunk: %d, %d, %d",
                         pos.getX() & 0xF, pos.getY() & 0xF, pos.getZ() & 0xF,
                         pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4));
+        }
+        else if (type == InfoToggle.DISTANCE)
+        {
+            Vec3d ref = DataStorage.getInstance().getDistanceReferencePoint();
+            double dist = MathHelper.sqrt(ref.squareDistanceTo(entity.posX, entity.posY, entity.posZ));
+            this.addLine(String.format("Distance: %.2f (x: %.2f y: %.2f z: %.2f) [to x: %.2f y: %.2f z: %.2f]",
+                    dist, entity.posX - ref.x, entity.posY - ref.y, entity.posZ - ref.z, ref.x, ref.y, ref.z));
         }
         else if (type == InfoToggle.FACING)
         {

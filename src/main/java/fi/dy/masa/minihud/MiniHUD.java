@@ -1,5 +1,6 @@
 package fi.dy.masa.minihud;
 
+import fi.dy.masa.minihud.hotkeys.KeyCallbacks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dimdev.rift.listener.client.ClientTickable;
@@ -51,18 +52,7 @@ public class MiniHUD implements ClientTickable, InitializationListener
             RenderEventHandler.getInstance().registerGameOverlayRenderer(RenderHandler.getInstance());
             RenderEventHandler.getInstance().registerWorldLastRenderer(RenderHandler.getInstance());
 
-            Configs.Generic.OPEN_CONFIG_GUI.getKeybind().setCallback(new CallbackOpenConfigGui());
-            Configs.Generic.TOGGLE_KEY.getKeybind().setCallback(new KeyCallbackToggleBoolean(Configs.Generic.ENABLED));
-        }
-    }
-
-    public static class CallbackOpenConfigGui implements IHotkeyCallback
-    {
-        @Override
-        public boolean onKeyAction(KeyAction action, IKeybind key)
-        {
-            Minecraft.getInstance().displayGuiScreen(new GuiConfigs());
-            return true;
+            KeyCallbacks.init();
         }
     }
 }

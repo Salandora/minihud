@@ -6,7 +6,9 @@ import java.util.Random;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.config.Configs;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.WorldServer;
@@ -112,5 +114,24 @@ public class MiscUtils
             MiniHUD.logger.error("Error while trying to get the chunk unload order");
             return -1;
         }
+    }
+
+    public static boolean isStructureWithinRange(MutableBoundingBox bb, BlockPos playerPos, int maxRange)
+    {
+        if (playerPos.getX() < (bb.minX - maxRange) ||
+            playerPos.getX() > (bb.maxX + maxRange) ||
+            playerPos.getZ() < (bb.minZ - maxRange) ||
+            playerPos.getZ() > (bb.maxZ + maxRange))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean areBoxesEqual(MutableBoundingBox bb1, MutableBoundingBox bb2)
+    {
+        return bb1.minX == bb2.minX && bb1.minY == bb2.minY && bb1.minZ == bb2.minZ &&
+               bb1.maxX == bb2.maxX && bb1.maxY == bb2.maxY && bb1.maxZ == bb2.maxZ;
     }
 }

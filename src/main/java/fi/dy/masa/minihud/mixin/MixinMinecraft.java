@@ -18,7 +18,7 @@ public class MixinMinecraft
     {
         if (worldClientIn == null || worldClientIn != (((Minecraft) (Object) this).world))
         {
-            DataStorage.getInstance().reset();
+            DataStorage.getInstance().onWorldLoad();
         }
     }
 }

@@ -1,7 +1,10 @@
 package fi.dy.masa.minihud.renderer;
 
 import org.lwjgl.opengl.GL11;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.util.Color4f;
+import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.minihud.config.Configs;
 import fi.dy.masa.minihud.config.RendererToggle;
 import fi.dy.masa.minihud.util.DataStorage;
@@ -9,7 +12,6 @@ import fi.dy.masa.minihud.util.MiscUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.PooledMutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 
@@ -92,8 +94,6 @@ public class OverlayRendererSlimeChunks extends OverlayRendererBase
 
             renderQuads.uploadData(BUFFER_1);
             renderLines.uploadData(BUFFER_2);
-
-            this.lastUpdatePos = new BlockPos(entity);
         }
     }
 
@@ -102,5 +102,25 @@ public class OverlayRendererSlimeChunks extends OverlayRendererBase
     {
         this.allocateBuffer(GL11.GL_QUADS);
         this.allocateBuffer(GL11.GL_LINES);
+    }
+
+    @Override
+    public String getSaveId()
+    {
+        return "slime_chunks";
+    }
+
+    @Override
+    public JsonObject toJson()
+    {
+        JsonObject obj = new JsonObject();
+        obj.add("y_top", new JsonPrimitive(overlayTopY));
+        return obj;
+    }
+
+    @Override
+    public void fromJson(JsonObject obj)
+    {
+        overlayTopY = JsonUtils.getFloat(obj, "y_top");
     }
 }
