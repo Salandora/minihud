@@ -664,14 +664,14 @@ public class DataStorage
         }
         else if (chunkGenerator instanceof ChunkGeneratorEnd)
         {
-            this.addStructuresWithinRange(StructureType.END_CITY, ((ChunkGeneratorNether)chunkGenerator).getStructureReferenceToStartMap(Structure.END_CITY), playerPos, maxRange);
+            this.addStructuresWithinRange(StructureType.END_CITY, ((ChunkGeneratorEnd)chunkGenerator).getStructureReferenceToStartMap(Structure.END_CITY), playerPos, maxRange);
         }
         else if (chunkGenerator instanceof ChunkGeneratorFlat)
         {
-            this.addStructuresWithinRange(StructureType.OCEAN_MONUMENT, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.OCEAN_MONUMENT), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.DESERT_PYRAMID), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.STRONGHOLD, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.STRONGHOLD), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.VILLAGE, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.VILLAGE), playerPos, maxRange);
+            this.addStructuresWithinRange(StructureType.OCEAN_MONUMENT, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.OCEAN_MONUMENT), playerPos, maxRange);
+            this.addStructuresWithinRange(((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.DESERT_PYRAMID), playerPos, maxRange);
+            this.addStructuresWithinRange(StructureType.STRONGHOLD, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.STRONGHOLD), playerPos, maxRange);
+            this.addStructuresWithinRange(StructureType.VILLAGE, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.VILLAGE), playerPos, maxRange);
         }
 
         this.structuresDirty = true;
