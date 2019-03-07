@@ -1,5 +1,7 @@
 package fi.dy.masa.minihud;
 
+import fi.dy.masa.malilib.event.WorldLoadHandler;
+import fi.dy.masa.minihud.event.WorldLoadListener;
 import fi.dy.masa.minihud.hotkeys.KeyCallbacks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,8 +51,14 @@ public class MiniHUD implements ClientTickable, InitializationListener
             ConfigManager.getInstance().registerConfigHandler(Reference.MOD_ID, new Configs());
             InputEventHandler.getInstance().registerKeybindProvider(InputHandler.getInstance());
 
-            RenderEventHandler.getInstance().registerGameOverlayRenderer(RenderHandler.getInstance());
-            RenderEventHandler.getInstance().registerWorldLastRenderer(RenderHandler.getInstance());
+            RenderHandler renderer = RenderHandler.getInstance();
+            RenderEventHandler.getInstance().registerGameOverlayRenderer(renderer);
+            RenderEventHandler.getInstance().registerTooltipLastRenderer(renderer);
+            RenderEventHandler.getInstance().registerWorldLastRenderer(renderer);
+
+            WorldLoadListener listener = new WorldLoadListener();
+            WorldLoadHandler.getInstance().registerWorldLoadPreHandler(listener);
+            WorldLoadHandler.getInstance().registerWorldLoadPostHandler(listener);
 
             KeyCallbacks.init();
         }
