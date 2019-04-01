@@ -80,7 +80,7 @@ public class KeyCallbackToggleRenderer extends KeyCallbackToggleBooleanConfigWit
 
                 InfoUtils.printActionbarMessage(message);
             }
-            else if (key == RendererToggle.OVERLAY_STRUCTURE_MAIN_TOGGLE.getKeybind())
+            /*else if (key == RendererToggle.OVERLAY_STRUCTURE_MAIN_TOGGLE.getKeybind())
             {
                 if (this.config.getBooleanValue() && mc.isSingleplayer() == false)
                 {
@@ -88,7 +88,7 @@ public class KeyCallbackToggleRenderer extends KeyCallbackToggleBooleanConfigWit
                     data.writeInt(DataStorage.CARPET_ID_BOUNDINGBOX_MARKERS);
                     //ClientPluginChannels.sendMessage(MiniHUD.CHANNEL_CARPET_CLIENT, data, ChannelPolicy.DISPATCH_ALWAYS);
                 }
-            }
+            }*/
 
             return true;
         }

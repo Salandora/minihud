@@ -20,6 +20,7 @@ import fi.dy.masa.malilib.util.JsonUtils;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.Reference;
+import fi.dy.masa.minihud.config.StructureToggle;
 import fi.dy.masa.minihud.mixin.IMixinChunkProviderServer;
 import fi.dy.masa.minihud.renderer.OverlayRendererSpawnableColumnHeights;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -187,6 +188,11 @@ public class DataStorage
     public void setStructuresNeedUpdating()
     {
         this.structuresNeedUpdating = true;
+    }
+
+    public void setStructuresDirty()
+    {
+        this.structuresDirty = true;
     }
 
     public int getDroppedChunksHashSize()
@@ -478,11 +484,15 @@ public class DataStorage
                     this.updateStructureDataFromIntegratedServer(playerPos);
                 }
             }
-            else if (this.hasStructureDataFromServer == false)
+            else if (this.structuresNeedUpdating(playerPos, 256))
             {
-                if (this.structuresNeedUpdating(playerPos, 1024))
+                if (this.hasStructureDataFromServer == false)
                 {
                     this.updateStructureDataFromNBTFiles(playerPos);
+                }
+                else
+                {
+                    StructureToggle.updateStructureData();
                 }
             }
         }
@@ -614,6 +624,15 @@ public class DataStorage
             StructureData.readStructureDataCarpetAllBoxes(this.structures, tagList);
             this.hasStructureDataFromServer = true;
             this.structuresDirty = true;
+            this.structuresNeedUpdating = false;
+
+            EntityPlayer player = Minecraft.getInstance().player;
+
+            if (player != null)
+            {
+                this.lastStructureUpdatePos = new BlockPos(player);
+            }
+
             MiniHUD.logger.info("Structure data updated from Carpet server (all), structures: {}", this.structures.size());
         }
     }
@@ -627,6 +646,8 @@ public class DataStorage
             this.structures.clear();
             StructureData.readStructureDataCarpetIndividualBoxesHeader(boxCount);
         }
+
+        MiniHUD.logger.info("Structure data header received from Carpet server, expecting {} boxes", boxCount);
     }
 
     private void readStructureDataCarpetSplitBoxes(PacketBuffer data, int boxCount) throws IOException
@@ -641,6 +662,16 @@ public class DataStorage
 
             this.hasStructureDataFromServer = true;
             this.structuresDirty = true;
+            this.structuresNeedUpdating = false;
+
+            EntityPlayer player = Minecraft.getInstance().player;
+
+            if (player != null)
+            {
+                this.lastStructureUpdatePos = new BlockPos(player);
+            }
+
+            MiniHUD.logger.info("Structure data received from Carpet server (split boxes), received {} boxes", boxCount);
         }
     }
 
