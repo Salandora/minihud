@@ -13,15 +13,12 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.JsonObject;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
-import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.Reference;
 import fi.dy.masa.minihud.config.StructureToggle;
 import fi.dy.masa.minihud.mixin.IMixinChunkProviderServer;
+import fi.dy.masa.minihud.renderer.OverlayRendererLightLevel;
 import fi.dy.masa.minihud.renderer.OverlayRendererSpawnableColumnHeights;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.client.Minecraft;
@@ -204,7 +201,7 @@ public class DataStorage
 
         if (mc.isSingleplayer())
         {
-            return MiscUtils.getCurrentHashSize(mc.getIntegratedServer().getWorld(mc.player.getEntityWorld().dimension.getType()));
+            return MiscUtils.getCurrentHashSize(mc.getIntegratedServer().getWorld(WorldUtils.getDimensionType(mc.player.getEntityWorld())));
         }
         else
         {
@@ -626,7 +623,7 @@ public class DataStorage
             this.structuresDirty = true;
             this.structuresNeedUpdating = false;
 
-            EntityPlayer player = Minecraft.getInstance().player;
+            EntityPlayer player = mc.player;
 
             if (player != null)
             {
@@ -664,7 +661,7 @@ public class DataStorage
             this.structuresDirty = true;
             this.structuresNeedUpdating = false;
 
-            EntityPlayer player = Minecraft.getInstance().player;
+            EntityPlayer player = mc.player;
 
             if (player != null)
             {

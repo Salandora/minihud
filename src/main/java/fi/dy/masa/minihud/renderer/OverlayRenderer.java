@@ -47,6 +47,11 @@ public class OverlayRenderer
             renderChunkUnloadBuckets(mc, entity, dx, dy, dz, chunkUnloadBucketOverlayY);
         }
 
+        if (RendererToggle.OVERLAY_LIGHT_LEVEL.getBooleanValue())
+        {
+            OverlayRendererLightLevel.render(dx, dy, dz, entity, mc);
+        }
+
         RenderContainer.INSTANCE.render(entity, mc, partialTicks);
     }
 
@@ -54,13 +59,14 @@ public class OverlayRenderer
     {
         final int centerX = ((int) MathHelper.floor(entity.posX)) >> 4;
         final int centerZ = ((int) MathHelper.floor(entity.posZ)) >> 4;
+        final float y = (float) chunkOverlayY;
+        final float scale = MathHelper.clamp((float) Configs.Generic.CHUNK_UNLOAD_BUCKET_FONT_SCALE.getDoubleValue(), 0.01f, 1f);
         int r = MathHelper.clamp(Configs.Generic.CHUNK_UNLOAD_BUCKET_OVERLAY_RADIUS.getIntegerValue(), -1, 40);
+
         if (r == -1)
         {
             r = mc.gameSettings.renderDistanceChunks;
         }
-        final float y = (float) chunkOverlayY;
-        final float scale = MathHelper.clamp((float) Configs.Generic.CHUNK_UNLOAD_BUCKET_FONT_SCALE.getDoubleValue(), 0.01f, 1f);
 
         for (int xOff = -r; xOff <= r; xOff++)
         {
