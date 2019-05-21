@@ -12,13 +12,14 @@ import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.network.play.server.SPacketChunkData;
 import net.minecraft.network.play.server.SPacketMultiBlockChange;
 import net.minecraft.network.play.server.SPacketPlayerListHeaderFooter;
+import net.minecraft.network.play.server.SPacketSpawnPosition;
 import net.minecraft.network.play.server.SPacketTimeUpdate;
 import net.minecraft.network.play.server.SPacketUnloadChunk;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 
 @Mixin(NetHandlerPlayClient.class)
-public class MixinNetHandlerPlayClient
+public abstract class MixinNetHandlerPlayClient
 {
     @Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
     public void onJoinGame(CallbackInfo ci) {
@@ -68,5 +69,11 @@ public class MixinNetHandlerPlayClient
     private void unChunkUnload(SPacketUnloadChunk packetIn, CallbackInfo ci)
     {
         DataStorage.getInstance().onChunkUnload(packetIn.getX(), packetIn.getZ());
+    }
+
+    @Inject(method = "handleSpawnPosition", at = @At("RETURN"))
+    private void onSetSpawn(SPacketSpawnPosition packet, CallbackInfo ci)
+    {
+        DataStorage.getInstance().setWorldSpawnIfUnknown(packet.getSpawnPos());
     }
 }

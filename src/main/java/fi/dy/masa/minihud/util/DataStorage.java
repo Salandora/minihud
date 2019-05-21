@@ -13,9 +13,15 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.JsonObject;
-import fi.dy.masa.malilib.util.*;
+import fi.dy.masa.malilib.util.Constants;
+import fi.dy.masa.malilib.util.FileUtils;
+import fi.dy.masa.malilib.util.InfoUtils;
+import fi.dy.masa.malilib.util.JsonUtils;
+import fi.dy.masa.malilib.util.StringUtils;
+import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.Reference;
+import fi.dy.masa.minihud.config.Configs;
 import fi.dy.masa.minihud.config.StructureToggle;
 import fi.dy.masa.minihud.mixin.IMixinChunkProviderServer;
 import fi.dy.masa.minihud.renderer.OverlayRendererLightLevel;
@@ -64,7 +70,6 @@ public class DataStorage
     private BlockPos lastStructureUpdatePos;
     private double serverTPS;
     private double serverMSPT;
-    private int droppedChunksHashSize = -1;
     private BlockPos worldSpawn = BlockPos.ORIGIN;
     private Vec3d distanceReferencePoint = Vec3d.ZERO;
     private final Set<ChunkPos> chunkHeightmapsToCheck = new HashSet<>();
@@ -90,6 +95,7 @@ public class DataStorage
         this.lastStructureUpdatePos = null;
         this.structures.clear();
         this.worldSeed = 0;
+        this.worldSpawn = BlockPos.ORIGIN;
     }
 
     public void setWorldSeed(long seed)
@@ -102,6 +108,14 @@ public class DataStorage
     {
         this.worldSpawn = spawn;
         this.worldSpawnValid = true;
+    }
+
+    public void setWorldSpawnIfUnknown(BlockPos spawn)
+    {
+        if (this.worldSpawnValid == false)
+        {
+            this.setWorldSpawn(spawn);
+        }
     }
 
     public boolean isWorldSeedKnown(DimensionType dimension)
@@ -138,22 +152,11 @@ public class DataStorage
 
     public boolean isWorldSpawnKnown()
     {
-        return this.worldSpawnValid || mc.world != null;
+        return this.worldSpawnValid;
     }
 
     public BlockPos getWorldSpawn()
     {
-        if (this.worldSpawnValid == false)
-        {
-            World world = mc.world;
-
-            if (world != null)
-            {
-                this.worldSpawn = world.getSpawnPoint();
-                this.worldSpawnValid = true;
-            }
-        }
-
         return this.worldSpawn;
     }
 
@@ -190,23 +193,6 @@ public class DataStorage
     public void setStructuresDirty()
     {
         this.structuresDirty = true;
-    }
-
-    public int getDroppedChunksHashSize()
-    {
-        if (this.droppedChunksHashSize > 0)
-        {
-            return this.droppedChunksHashSize;
-        }
-
-        if (mc.isSingleplayer())
-        {
-            return MiscUtils.getCurrentHashSize(mc.getIntegratedServer().getWorld(WorldUtils.getDimensionType(mc.player.getEntityWorld())));
-        }
-        else
-        {
-            return 0xFFFF;
-        }
     }
 
     public Vec3d getDistanceReferencePoint()
@@ -305,16 +291,16 @@ public class DataStorage
                 try
                 {
                     this.setWorldSeed(Long.parseLong(parts[1]));
-                    MiscUtils.printInfoMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
+                    InfoUtils.printActionbarMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
                 }
                 catch (NumberFormatException e)
                 {
-                    MiscUtils.printInfoMessage("minihud.message.error.invalid_seed");
+                    InfoUtils.printActionbarMessage("minihud.message.error.invalid_seed");
                 }
             }
             else if (this.worldSeedValid && parts.length == 1)
             {
-                MiscUtils.printInfoMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
+                InfoUtils.printActionbarMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
             }
 
             return true;
@@ -325,17 +311,18 @@ public class DataStorage
             {
                 try
                 {
-                    this.droppedChunksHashSize = Integer.parseInt(parts[1]);
-                    MiscUtils.printInfoMessage("minihud.message.dropped_chunks_hash_size_set", Integer.valueOf(this.droppedChunksHashSize));
+                    int size = Integer.parseInt(parts[1]);
+                    Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.setIntegerValue(size);
+                    InfoUtils.printActionbarMessage("minihud.message.dropped_chunks_hash_size_set", Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.getIntegerValue());
                 }
                 catch (NumberFormatException e)
                 {
-                    MiscUtils.printInfoMessage("minihud.message.error.invalid_dropped_chunks_hash_size");
+                    InfoUtils.printActionbarMessage("minihud.message.error.invalid_dropped_chunks_hash_size");
                 }
             }
             else if (parts.length == 1)
             {
-                MiscUtils.printInfoMessage("minihud.message.dropped_chunks_hash_size_set", Integer.valueOf(this.getDroppedChunksHashSize()));
+                InfoUtils.printActionbarMessage("minihud.message.dropped_chunks_hash_size_set", Integer.valueOf(MiscUtils.getDroppedChunksHashSize()));
             }
 
             return true;
@@ -363,7 +350,7 @@ public class DataStorage
                     {
                         this.setWorldSeed(Long.parseLong(str.substring(i1 + 1, i2)));
                         MiniHUD.logger.info("Received world seed from the vanilla /seed command: {}", this.worldSeed);
-                        MiscUtils.printInfoMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
+                        InfoUtils.printActionbarMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
                     }
                 }
                 catch (Exception e)
@@ -378,7 +365,7 @@ public class DataStorage
                 {
                     this.setWorldSeed(Long.parseLong(text.getFormatArgs()[1].toString()));
                     MiniHUD.logger.info("Received world seed from the JED '/jed seed' command: {}", this.worldSeed);
-                    MiscUtils.printInfoMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
+                    InfoUtils.printActionbarMessage("minihud.message.seed_set", Long.valueOf(this.worldSeed));
                 }
                 catch (Exception e)
                 {
@@ -398,7 +385,7 @@ public class DataStorage
 
                     String spawnStr = String.format("x: %d, y: %d, z: %d", this.worldSpawn.getX(), this.worldSpawn.getY(), this.worldSpawn.getZ());
                     MiniHUD.logger.info("Received world spawn from the vanilla /setworldspawn command: {}", spawnStr);
-                    MiscUtils.printInfoMessage("minihud.message.spawn_set", spawnStr);
+                    InfoUtils.printActionbarMessage("minihud.message.spawn_set", spawnStr);
                 }
                 catch (Exception e)
                 {

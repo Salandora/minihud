@@ -21,13 +21,14 @@ public enum InfoToggle implements IConfigInteger, IHotkeyTogglable
     CHUNK_POS               ("infoChunkPosition",           false,  7, "", "Show the Chunk the player is currently within"),
     CHUNK_SECTIONS          ("infoChunkSections",           false, 14, "", "Show the currently rendered number of\nChunk sections (the C value from F3)"),
     CHUNK_SECTIONS_FULL     ("infoChunkSectionsLine",       false, 15, "", "Show the entire line of the C value from the F3 screen"),
-    CHUNK_UNLOAD_ORDER      ("infoChunkUnloadOrder",        false, 30, "", "Show the \"unload order\" (HashSet bucket)\nof the current chunk (for vanilla Perma-Loaders)"),
+    CHUNK_UNLOAD_ORDER      ("infoChunkUnloadOrder",        false, 30, "", "Show the \"unload order\" (HashSet bucket)\nof the current chunk (for vanilla <= 1.12.x Perma-Loaders)", KeybindSettings.INGAME_BOTH),
     CHUNK_UPDATES           ("infoChunkUpdates",            false, 16, "", "Show the current number of chunk updates per second"),
     COORDINATES             ("infoCoordinates",             true,   4, "", "Show the player's coordinates"),
     DIFFICULTY              ("infoDifficulty",              false, 18, "", "Show the local difficulty"),
     DIMENSION               ("infoDimensionId",             false,  5, "", "Show the current dimension ID\n(might not be accurate in every case,\ndepending on the server (Sponge?)!)"),
     DISTANCE                ("infoDistance",                false, 33, "", "Show the distance to the current reference point.\nSet the reference point with the setDistanceReferencePoint hotkey"),
     ENTITIES                ("infoEntities",                false, 21, "", "Show the visible/loaded entity count"),
+    ENTITIES_CLIENT_WORLD   ("infoEntitiesClientWorld",     false, 22, "", "Show the entity count in the world list/map"),
     ENTITY_REG_NAME         ("infoEntityRegistryName",      false, 24, "", "Show the registry name of the entity\nthe player is currently looking at"),
     FACING                  ("infoFacing",                  true,   8, "", "Show the player's current facing"),
     FPS                     ("infoFPS",                     false,  0, "", "Show the current FPS"),
@@ -36,8 +37,9 @@ public enum InfoToggle implements IConfigInteger, IHotkeyTogglable
     LOOKING_AT_BLOCK_CHUNK  ("infoLookingAtBlockInChunk",   false, 26, "", "Show which block within its containing chunk\nthe player is currently looking at"),
     LOOKING_AT_ENTITY       ("infoLookingAtEntity",         false, 23, "", "Show the entity name and health when looked at"),
     MEMORY_USAGE            ("infoMemoryUsage",             false,  0, "", "Show the memory usage and allocation"),
-    MP_CHUNK_CACHE          ("infoMultiplayerChunkCache",   false, 31, "", "Show the Multiplayer Chunk Cache size"),
+    LOADED_CHUNKS_COUNT     ("infoLoadedChunksCount",       false, 31, "", "Show the number of loaded chunks on the client"),
     PARTICLE_COUNT          ("infoParticleCount",           false, 17, "", "Show the currently renderer particle count (P from F3)"),
+    PING                    ("infoPing",                    false, 36, "", "Show the current ping to the server"),
     REGION_FILE             ("infoRegionFile",              false, 29, "", "Show the region file the player is currently within"),
     ROTATION_PITCH          ("infoRotationPitch",           false, 12, "", "Show the player's pitch rotation"),
     ROTATION_YAW            ("infoRotationYaw",             false, 11, "", "Show the player's yaw rotation"),
@@ -46,7 +48,10 @@ public enum InfoToggle implements IConfigInteger, IHotkeyTogglable
     SPAWNABLE_SUB_CHUNKS    ("infoSpawnableSubChunks",      false, 32, "", "Show the spawnable sub chunk count for the current chunk"),
     SPEED                   ("infoSpeed",                   false, 13, "", "Show the player's current moving speed"),
     SPEED_AXIS              ("infoSpeedAxis",               false, 13, "", "Show the player's current moving speed per axis"),
+    TILE_ENTITIES           ("infoTileEntities",            false, 32, "", "Show the number of TileEntities in the client world"),
+    TIME_DAY_MODULO         ("infoTimeDayModulo",           false, 35, "", "Show a modulo of the current day time.\nSee Generic configs for the divisor."),
     TIME_REAL               ("infoTimeIRL",                 true,   1, "", "Show the current real time formatted according to dateFormatReal"),
+    TIME_TOTAL_MODULO       ("infoTimeTotalModulo",         false, 34, "", "Show a modulo of the current total world time.\nSee Generic configs for the divisor."),
     TIME_WORLD              ("infoTimeWorld",               false,  2, "", "Show the current world time in ticks"),
     TIME_WORLD_FORMATTED    ("infoWorldTimeFormatted",      false,  3, "", "Show the current world time formatted to days, hours, minutes");
 
@@ -61,11 +66,16 @@ public enum InfoToggle implements IConfigInteger, IHotkeyTogglable
 
     private InfoToggle(String name, boolean defaultValue, int linePosition, String defaultHotkey, String comment)
     {
+        this(name, defaultValue, linePosition, defaultHotkey, comment, KeybindSettings.DEFAULT);
+    }
+
+    private InfoToggle(String name, boolean defaultValue, int linePosition, String defaultHotkey, String comment, KeybindSettings settings)
+    {
         this.name = name;
         this.prettyName = name;
         this.valueBoolean = defaultValue;
         this.defaultValueBoolean = defaultValue;
-        this.keybind = KeybindMulti.fromStorageString(defaultHotkey, KeybindSettings.DEFAULT);
+        this.keybind = KeybindMulti.fromStorageString(defaultHotkey, settings);
         this.keybind.setCallback(new KeyCallbackToggleBoolean(this));
         this.linePosition = linePosition;
         this.defaultLinePosition = linePosition;

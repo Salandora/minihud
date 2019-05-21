@@ -37,6 +37,7 @@ public class Configs implements IConfigHandler
         public static final ConfigOptionList    BLOCK_GRID_OVERLAY_MODE             = new ConfigOptionList("blockGridOverlayMode", BlockGridMode.ALL, "The block grid render mode");
         public static final ConfigInteger       BLOCK_GRID_OVERLAY_RADIUS           = new ConfigInteger("blockGridOverlayRadius", 32, "The radius of the block grid lines to render");
         public static final ConfigDouble        CHUNK_UNLOAD_BUCKET_FONT_SCALE      = new ConfigDouble("chunkUnloadBucketOverlayFontScale", 0.1625, "The font scale for the Chunk unload order bucket overlay.\nValid range: 0.01 - 1.0");
+        public static final ConfigInteger       DROPPED_CHUNKS_HASH_SIZE            = new ConfigInteger("droppedChunksHashSize", -1, -1, Integer.MAX_VALUE, "The HashSet size for the chunk unload bucket calculation,\nif 'chunkUnloadBucketWithSize' is true.\nUse -1 for automatically getting the current value in single player.");
         public static final ConfigInteger       CHUNK_UNLOAD_BUCKET_OVERLAY_RADIUS  = new ConfigInteger("chunkUnloadBucketOverlayChunkRadius", -1, "The radius of chunks to render the text for in the overlay.\nValid range: -1 - 40, where -1 = render distance");
         public static final ConfigBoolean       CHUNK_UNLOAD_BUCKET_WITH_SIZE       = new ConfigBoolean("chunkUnloadBucketWithSize", false, "If enabled, uses the more accurate (but still experimental)\nchunk unload bucket calculations, taken from the Carpet mod");
         public static final ConfigString        COORDINATE_FORMAT_STRING            = new ConfigString("coordinateFormat", "x: %.1f y: %.1f z: %.1f", "The format string for the coordinate line.\nNeeds to have three %f format strings!\nDefault: x: %.1f y: %.1f z: %.1f");
@@ -68,6 +69,7 @@ public class Configs implements IConfigHandler
         public static final ConfigHotkey        SHAPE_EDITOR                        = new ConfigHotkey("shapeEditor", "", "Opens the Shape Editor GUI for the selected shape");
         public static final ConfigBoolean       SHULKER_BOX_PREVIEW                 = new ConfigBoolean("shulkerBoxPreview", false, "Enables rendering a preview of the Shulker Box contents,\nwhen you hold shift while hovering over a Shulker Box item");
         public static final ConfigBoolean       SHULKER_DISPLAY_BACKGROUND_COLOR    = new ConfigBoolean("shulkerDisplayBgColor", true, "Enables tinting/coloring the Shulker Box display\nbackground texture with the dye color of the box");
+        public static final ConfigBoolean       SHULKER_DISPLAY_REQUIRE_SHIFT       = new ConfigBoolean("shulkerDisplayRequireShift", true, "Whether or not holding shift is required for the Shulker Box preview");
         public static final ConfigInteger       SLIME_CHUNK_OVERLAY_RADIUS          = new ConfigInteger("slimeChunkOverlayRadius", -1, "The radius of chunks to render the slime chunk overlay in.\nValid range: 0 - 40, where -1 = render distance");
         public static final ConfigBoolean       SORT_LINES_BY_LENGTH                = new ConfigBoolean("sortLinesByLength", false, "Sort the lines by their text's length");
         public static final ConfigBoolean       SORT_LINES_REVERSED                 = new ConfigBoolean("sortLinesReversed", false, "Reverse the line sorting order");
@@ -76,6 +78,8 @@ public class Configs implements IConfigHandler
         public static final ConfigInteger       SPAWNABLE_SUB_CHUNKS_OVERLAY_RADIUS = new ConfigInteger("spawnableSubChunksOverlayRadius", -1, "The radius of chunks to render the spawnable sub-chunks\noverlay in. Valid range: -1 - 40, where -1 = render distance");
         public static final ConfigInteger       TEXT_POS_X                          = new ConfigInteger("textPosX", 4, "Text X position from the screen edge (default: 4)");
         public static final ConfigInteger       TEXT_POS_Y                          = new ConfigInteger("textPosY", 4, "Text Y position from the screen edge (default: 4)");
+        public static final ConfigInteger       TIME_DAY_DIVISOR                    = new ConfigInteger("timeDayDivisor", 24000, 1, Integer.MAX_VALUE, "The divisor value for the modulo of the day time");
+        public static final ConfigInteger       TIME_TOTAL_DIVISOR                  = new ConfigInteger("timeTotalDivisor", 24000, 1, Integer.MAX_VALUE, "The divisor value for the modulo of the total world time");
         public static final ConfigHotkey        TOGGLE_KEY                          = new ConfigHotkey("toggleKey", "H", KeybindSettings.RELEASE_EXCLUSIVE, "The main toggle key");
         public static final ConfigBoolean       USE_CUSTOMIZED_COORDINATES          = new ConfigBoolean("useCustomizedCoordinateFormat", true, "Use the customized coordinate format string");
         public static final ConfigBoolean       USE_FONT_SHADOW                     = new ConfigBoolean("useFontShadow", false, "Use font shadow");
@@ -93,6 +97,7 @@ public class Configs implements IConfigHandler
                 REQUIRE_SNEAK,
                 SHULKER_BOX_PREVIEW,
                 SHULKER_DISPLAY_BACKGROUND_COLOR,
+                SHULKER_DISPLAY_REQUIRE_SHIFT,
                 SORT_LINES_BY_LENGTH,
                 SORT_LINES_REVERSED,
                 USE_CUSTOMIZED_COORDINATES,
@@ -115,6 +120,7 @@ public class Configs implements IConfigHandler
                 COORDINATE_FORMAT_STRING,
                 DATE_FORMAT_REAL,
                 DATE_FORMAT_MINECRAFT,
+                DROPPED_CHUNKS_HASH_SIZE,
                 FONT_SCALE,
                 LIGHT_LEVEL_MARKER_SIZE,
                 LIGHT_LEVEL_NUMBER_OFFSET_BLOCK_X,
@@ -129,7 +135,9 @@ public class Configs implements IConfigHandler
                 SPAWNABLE_SUB_CHUNK_CHECK_INTERVAL,
                 SPAWNABLE_SUB_CHUNKS_OVERLAY_RADIUS,
                 TEXT_POS_X,
-                TEXT_POS_Y
+                TEXT_POS_Y,
+                TIME_DAY_DIVISOR,
+                TIME_TOTAL_DIVISOR
         );
 
         public static final List<ConfigHotkey> HOTKEY_LIST = ImmutableList.of(

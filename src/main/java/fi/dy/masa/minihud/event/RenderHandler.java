@@ -21,6 +21,8 @@ import fi.dy.masa.minihud.util.DataStorage;
 import fi.dy.masa.minihud.util.MiscUtils;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.entity.Entity;
@@ -42,6 +44,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumLightType;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.dimension.DimensionType;
@@ -136,7 +139,12 @@ public class RenderHandler implements IRenderer
         }
         else if (Configs.Generic.SHULKER_BOX_PREVIEW.getBooleanValue())
         {
-            fi.dy.masa.malilib.render.RenderUtils.renderShulkerBoxPreview(stack, x, y, Configs.Generic.SHULKER_DISPLAY_BACKGROUND_COLOR.getBooleanValue());
+            boolean render = Configs.Generic.SHULKER_DISPLAY_REQUIRE_SHIFT.getBooleanValue() == false || GuiScreen.isShiftKeyDown();
+
+            if (render)
+            {
+                fi.dy.masa.malilib.render.RenderUtils.renderShulkerBoxPreview(stack, x, y, Configs.Generic.SHULKER_DISPLAY_BACKGROUND_COLOR.getBooleanValue());
+            }
         }
     }
 
@@ -220,7 +228,14 @@ public class RenderHandler implements IRenderer
 
         for (LinePos pos : positions)
         {
-            this.addLine(pos.type);
+            try
+            {
+                this.addLine(pos.type);
+            }
+            catch (Exception e)
+            {
+                this.addLine(pos.type.getName() + ": exception");
+            }
         }
 
         if (Configs.Generic.SORT_LINES_BY_LENGTH.getBooleanValue())
@@ -315,6 +330,18 @@ public class RenderHandler implements IRenderer
                 this.addLine("Date formatting failed - Invalid date format string?");
             }
         }
+        else if (type == InfoToggle.TIME_DAY_MODULO)
+        {
+            int mod = Configs.Generic.TIME_DAY_DIVISOR.getIntegerValue();
+            long current = world.getDayTime() % mod;
+            this.addLine(String.format("Day time %% %d: %5d", mod, current));
+        }
+        else if (type == InfoToggle.TIME_TOTAL_MODULO)
+        {
+            int mod = Configs.Generic.TIME_TOTAL_DIVISOR.getIntegerValue();
+            long current = world.getGameTime() % mod;
+            this.addLine(String.format("Total time %% %d: %5d", mod, current));
+        }
         else if (type == InfoToggle.SERVER_TPS)
         {
             if (mc.isSingleplayer() && (mc.getIntegratedServer().getTickCounter() % 10) == 0)
@@ -351,6 +378,15 @@ public class RenderHandler implements IRenderer
             else
             {
                 this.addLine("Server TPS: <no valid data>");
+            }
+        }
+        else if (type == InfoToggle.PING)
+        {
+            NetworkPlayerInfo info = mc.player.connection.getPlayerInfo(mc.player.getUniqueID());
+
+            if (info != null)
+            {
+                this.addLine("Ping: " + info.getResponseTime() + " ms");
             }
         }
         else if (type == InfoToggle.COORDINATES ||
@@ -547,11 +583,29 @@ public class RenderHandler implements IRenderer
         else if (type == InfoToggle.CHUNK_UNLOAD_ORDER)
         {
             int bucket = MiscUtils.getChunkUnloadBucket(pos.getX() >> 4, pos.getZ() >> 4);
-            this.addLine(String.format("Chunk unload bucket: %d", bucket));
+            String str1 = String.format("Chunk unload bucket: %d", bucket);
+
+            if (Configs.Generic.CHUNK_UNLOAD_BUCKET_WITH_SIZE.getBooleanValue())
+            {
+                str1 += String.format(" - Hash size: %d", MiscUtils.getDroppedChunksHashSize());
+            }
+
+            this.addLine(str1);
         }
-        else if (type == InfoToggle.MP_CHUNK_CACHE)
+        else if (type == InfoToggle.LOADED_CHUNKS_COUNT)
         {
-            this.addLine(mc.world.getProviderName());
+            String chunksClient = mc.world.getProviderName();
+            World worldServer = WorldUtils.getBestWorld(mc);
+
+            if (worldServer != null && worldServer != mc.world)
+            {
+                String chunksServer = worldServer.getChunkProvider().makeString();
+                this.addLine(String.format("Server: %s - Client: %s", chunksServer, chunksClient));
+            }
+            else
+            {
+                this.addLine(chunksClient);
+            }
         }
         else if (type == InfoToggle.PARTICLE_COUNT)
         {
@@ -618,6 +672,28 @@ public class RenderHandler implements IRenderer
             }
 
             this.addLine(ent);
+        }
+        else if (type == InfoToggle.TILE_ENTITIES)
+        {
+            this.addLine(String.format("Client world TE - L: %d, T: %d", mc.world.loadedTileEntityList.size(), mc.world.tickableTileEntities.size()));
+        }
+        else if (type == InfoToggle.ENTITIES_CLIENT_WORLD)
+        {
+            int countClient = mc.world.loadedEntityList.size();
+
+            if (mc.isIntegratedServerRunning())
+            {
+                World serverWorld = WorldUtils.getBestWorld(mc);
+
+                if (serverWorld != null && serverWorld instanceof WorldServer)
+                {
+                    int countServer = serverWorld.loadedEntityList.size();
+                    this.addLine(String.format("Entities - Client: %d, Server: %d", countClient, countServer));
+                    return;
+                }
+            }
+
+            this.addLine(String.format("Entities - Client: %d", countClient));
         }
         else if (type == InfoToggle.SLIME_CHUNK)
         {

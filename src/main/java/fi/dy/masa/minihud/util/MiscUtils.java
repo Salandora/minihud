@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Random;
 import fi.dy.masa.minihud.MiniHUD;
+import java.util.Set;
+import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.minihud.config.Configs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
@@ -39,11 +41,32 @@ public class MiscUtils
         return RAND.nextInt(10) == 0;
     }
 
+    public static int getDroppedChunksHashSize()
+    {
+        int size = Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.getIntegerValue();
+
+        if (size > 0)
+        {
+            return size;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+
+        if (mc.isSingleplayer())
+        {
+            return getCurrentHashSize(mc.getIntegratedServer().getWorld(mc.player.getEntityWorld().dimension.getType()));
+        }
+        else
+        {
+            return 0xFFFF;
+        }
+    }
+
     public static int getChunkUnloadBucket(int chunkX, int chunkZ)
     {
         if (Configs.Generic.CHUNK_UNLOAD_BUCKET_WITH_SIZE.getBooleanValue())
         {
-            return getChunkOrder(chunkX, chunkZ, DataStorage.getInstance().getDroppedChunksHashSize());
+            return getChunkOrder(chunkX, chunkZ, getDroppedChunksHashSize());
         }
         // The old simple calculation, without knowledge of the HashSet size
         else
@@ -51,11 +74,6 @@ public class MiscUtils
             int longHash = Long.valueOf(ChunkPos.asLong(chunkX, chunkZ)).hashCode();
             return (longHash ^ (longHash >>> 16)) & 0xFFFF;
         }
-    }
-
-    public static void printInfoMessage(String key, Object... args)
-    {
-        Minecraft.getInstance().ingameGUI.addChatMessage(ChatType.GAME_INFO, new TextComponentTranslation(key, args));
     }
 
     /**
