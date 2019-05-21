@@ -1,5 +1,6 @@
 package fi.dy.masa.minihud.mixin;
 
+import fi.dy.masa.minihud.network.PluginChannelRegister;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,6 +20,12 @@ import net.minecraft.util.math.ChunkPos;
 @Mixin(NetHandlerPlayClient.class)
 public class MixinNetHandlerPlayClient
 {
+    @Inject(method = "handleJoinGame", at = @At(value = "RETURN"))
+    public void onJoinGame(CallbackInfo ci) {
+        PluginChannelRegister reg = new PluginChannelRegister();
+        reg.sendToServer();
+    }
+
     @Inject(method = "handleChat", at = @At("RETURN"))
     private void onChatMessage(SPacketChat packet, CallbackInfo ci)
     {

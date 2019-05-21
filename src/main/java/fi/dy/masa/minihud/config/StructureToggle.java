@@ -8,6 +8,7 @@ import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.hotkeys.IHotkey;
 import fi.dy.masa.malilib.interfaces.IValueChangeCallback;
 import fi.dy.masa.minihud.MiniHUD;
+import fi.dy.masa.minihud.network.CarpetPluginChannel;
 import fi.dy.masa.minihud.util.DataStorage;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
@@ -101,9 +102,8 @@ public enum StructureToggle
     {
         if (Minecraft.getInstance().isSingleplayer() == false)
         {
-            PacketBuffer data = new PacketBuffer(Unpooled.buffer());
-            data.writeInt(DataStorage.CARPET_ID_BOUNDINGBOX_MARKERS);
-            //ClientPluginChannels.sendMessage(LiteModMiniHud.CHANNEL_CARPET_CLIENT, data, ChannelPolicy.DISPATCH_ALWAYS);
+            CarpetPluginChannel.sendBoundingBoxMarkerRequest();
+
             MiniHUD.logger.info("Requesting structure data from Carpet server");
         }
 

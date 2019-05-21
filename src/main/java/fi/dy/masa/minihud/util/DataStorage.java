@@ -225,6 +225,7 @@ public class DataStorage
     {
         OverlayRendererSpawnableColumnHeights.markChunkChanged(chunkX, chunkZ);
         this.chunkHeightmapsToCheck.add(new ChunkPos(chunkX, chunkZ));
+        OverlayRendererLightLevel.setNeedsUpdate();
     }
 
     public void checkQueuedDirtyChunkHeightmaps()
