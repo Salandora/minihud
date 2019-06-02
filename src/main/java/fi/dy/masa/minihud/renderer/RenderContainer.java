@@ -102,7 +102,6 @@ public class RenderContainer
             GlStateManager.depthMask(false);
             GlStateManager.polygonOffset(-3f, -3f);
             GlStateManager.enablePolygonOffset();
-            GlStateManager.polygonOffset(-0.1f, -0.8f);
             GlStateManager.enableBlend();
             GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             GlStateManager.color4f(1f, 1f, 1f, 1f);
@@ -157,8 +156,6 @@ public class RenderContainer
             GlStateManager.enableLighting();
             GlStateManager.enableCull();
             GlStateManager.depthMask(true);
-            GlStateManager.polygonOffset(0f, 0f);
-            GlStateManager.disablePolygonOffset();
             GlStateManager.enableTexture2D();
             GlStateManager.popMatrix();
         }

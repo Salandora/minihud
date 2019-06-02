@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -13,17 +12,10 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.JsonObject;
-import fi.dy.masa.malilib.util.Constants;
-import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.malilib.util.InfoUtils;
-import fi.dy.masa.malilib.util.JsonUtils;
-import fi.dy.masa.malilib.util.StringUtils;
-import fi.dy.masa.malilib.util.WorldUtils;
+import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.Reference;
-import fi.dy.masa.minihud.config.Configs;
-import fi.dy.masa.minihud.config.StructureToggle;
-import fi.dy.masa.minihud.mixin.IMixinChunkProviderServer;
+import fi.dy.masa.minihud.network.CarpetPluginChannel;
 import fi.dy.masa.minihud.renderer.OverlayRendererLightLevel;
 import fi.dy.masa.minihud.renderer.OverlayRendererSpawnableColumnHeights;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -45,8 +37,9 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.gen.*;
-import net.minecraft.world.gen.feature.structure.*;
+import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraft.world.gen.feature.structure.StructureStart;
 
 public class DataStorage
 {
@@ -82,7 +75,7 @@ public class DataStorage
         return INSTANCE;
     }
 
-    public void onWorldLoad()
+    public void reset()
     {
         this.worldSeedValid = false;
         this.serverTPSValid = false;
@@ -305,28 +298,6 @@ public class DataStorage
 
             return true;
         }
-        else if (parts[0].equals("minihud-dropped-chunks-hash-size"))
-        {
-            if (parts.length == 2)
-            {
-                try
-                {
-                    int size = Integer.parseInt(parts[1]);
-                    Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.setIntegerValue(size);
-                    InfoUtils.printActionbarMessage("minihud.message.dropped_chunks_hash_size_set", Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.getIntegerValue());
-                }
-                catch (NumberFormatException e)
-                {
-                    InfoUtils.printActionbarMessage("minihud.message.error.invalid_dropped_chunks_hash_size");
-                }
-            }
-            else if (parts.length == 1)
-            {
-                InfoUtils.printActionbarMessage("minihud.message.dropped_chunks_hash_size_set", Integer.valueOf(MiscUtils.getDroppedChunksHashSize()));
-            }
-
-            return true;
-        }
 
         return false;
     }
@@ -456,6 +427,16 @@ public class DataStorage
         return copy;
     }
 
+    public void requestStructureDataFromServer()
+    {
+        if (Minecraft.getInstance().isSingleplayer() == false)
+        {
+            CarpetPluginChannel.sendBoundingBoxMarkerRequest();
+
+            MiniHUD.logger.info("Requesting structure data from Carpet server");
+        }
+    }
+
     public void updateStructureData()
     {
         if (this.mc != null && this.mc.world != null && this.mc.player != null)
@@ -471,14 +452,7 @@ public class DataStorage
             }
             else if (this.structuresNeedUpdating(playerPos, 256))
             {
-                if (this.hasStructureDataFromServer == false)
-                {
-                    this.updateStructureDataFromNBTFiles(playerPos);
-                }
-                else
-                {
-                    StructureToggle.updateStructureData();
-                }
+                this.requestStructureDataFromServer();
             }
         }
     }
@@ -503,7 +477,8 @@ public class DataStorage
 
         if (world != null)
         {
-            final IChunkGenerator chunkGenerator = ((IMixinChunkProviderServer) world.getChunkProvider()).getChunkGenerator();
+            final IChunkGenerator<?> chunkGenerator = world.getChunkProvider().getChunkGenerator();
+            final DimensionType dimensionType = world.dimension.getType();
             final DataStorage storage = this;
             final int maxRange = (this.mc.gameSettings.renderDistanceChunks + 4) * 16;
 
@@ -514,52 +489,13 @@ public class DataStorage
                 {
                     synchronized (storage.structures)
                     {
-                        storage.addStructureDataFromGenerator(chunkGenerator, playerPos, maxRange);
+                        storage.addStructureDataFromGenerator(chunkGenerator, dimensionType, playerPos, maxRange);
                     }
                 }
             });
         }
 
         this.lastStructureUpdatePos = playerPos;
-        this.structuresNeedUpdating = false;
-    }
-
-    private void updateStructureDataFromNBTFiles(final BlockPos playerPos)
-    {
-        synchronized (this.structures)
-        {
-            this.structures.clear();
-
-            File dir = this.getLocalStructureFileDirectory();
-
-            if (dir != null && dir.exists() && dir.isDirectory())
-            {
-                for (StructureType type : StructureType.values())
-                {
-                    if (type.isTemple() == false)
-                    {
-                        NBTTagCompound nbt = FileUtils.readNBTFile(new File(dir, type.getStructureName() + ".dat"));
-
-                        if (nbt != null)
-                        {
-                            StructureData.readAndAddStructuresToMap(this.structures, nbt, type);
-                        }
-                    }
-                }
-
-                NBTTagCompound nbt = FileUtils.readNBTFile(new File(dir, "Temple.dat"));
-
-                if (nbt != null)
-                {
-                    StructureData.readAndAddTemplesToMap(this.structures, nbt);
-                }
-
-                MiniHUD.logger.info("Structure data updated from local structure files, structures: {}", this.structures.size());
-            }
-        }
-
-        this.lastStructureUpdatePos = playerPos;
-        this.structuresDirty = true;
         this.structuresNeedUpdating = false;
     }
 
@@ -611,7 +547,7 @@ public class DataStorage
             this.structuresDirty = true;
             this.structuresNeedUpdating = false;
 
-            EntityPlayer player = mc.player;
+            EntityPlayer player = Minecraft.getInstance().player;
 
             if (player != null)
             {
@@ -635,7 +571,7 @@ public class DataStorage
         MiniHUD.logger.info("Structure data header received from Carpet server, expecting {} boxes", boxCount);
     }
 
-    private void readStructureDataCarpetSplitBoxes(PacketBuffer data, int boxCount) throws IOException
+    private void readStructureDataCarpetSplitBoxes(PacketBuffer data, int boxCount)
     {
         synchronized (this.structures)
         {
@@ -649,7 +585,7 @@ public class DataStorage
             this.structuresDirty = true;
             this.structuresNeedUpdating = false;
 
-            EntityPlayer player = mc.player;
+            EntityPlayer player = Minecraft.getInstance().player;
 
             if (player != null)
             {
@@ -660,66 +596,30 @@ public class DataStorage
         }
     }
 
-    private void addStructureDataFromGenerator(IChunkGenerator chunkGenerator, BlockPos playerPos, int maxRange)
+    private void addStructureDataFromGenerator(IChunkGenerator<?> chunkGenerator, DimensionType dimensionType, BlockPos playerPos, int maxRange)
     {
-        if (chunkGenerator instanceof ChunkGeneratorOverworld)
+        for (StructureType type : StructureType.values())
         {
-            this.addStructuresWithinRange(StructureType.OCEAN_MONUMENT, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.OCEAN_MONUMENT), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.OCEAN_RUIN), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.DESERT_PYRAMID), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.JUNGLE_PYRAMID), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.STRONGHOLD, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.STRONGHOLD), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.VILLAGE, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.VILLAGE), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.MANSION, ((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.WOODLAND_MANSION), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.SWAMP_HUT), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorOverworld)chunkGenerator).getStructureReferenceToStartMap(Structure.IGLOO), playerPos, maxRange);
-        }
-        else if (chunkGenerator instanceof ChunkGeneratorNether)
-        {
-            this.addStructuresWithinRange(StructureType.NETHER_FORTRESS, ((ChunkGeneratorNether)chunkGenerator).getStructureReferenceToStartMap(Structure.FORTRESS), playerPos, maxRange);
-        }
-        else if (chunkGenerator instanceof ChunkGeneratorEnd)
-        {
-            this.addStructuresWithinRange(StructureType.END_CITY, ((ChunkGeneratorEnd)chunkGenerator).getStructureReferenceToStartMap(Structure.END_CITY), playerPos, maxRange);
-        }
-        else if (chunkGenerator instanceof ChunkGeneratorFlat)
-        {
-            this.addStructuresWithinRange(StructureType.OCEAN_MONUMENT, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.OCEAN_MONUMENT), playerPos, maxRange);
-            this.addStructuresWithinRange(((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.DESERT_PYRAMID), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.STRONGHOLD, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.STRONGHOLD), playerPos, maxRange);
-            this.addStructuresWithinRange(StructureType.VILLAGE, ((ChunkGeneratorFlat)chunkGenerator).getStructureReferenceToStartMap(Structure.VILLAGE), playerPos, maxRange);
+            if (type.isEnabled() && type.existsInDimension(dimensionType))
+            {
+                this.addStructuresWithinRange(type, chunkGenerator, playerPos, maxRange);
+            }
         }
 
         this.structuresDirty = true;
+
         MiniHUD.logger.info("Structure data updated from the integrated server");
     }
 
-    private void addStructuresWithinRange(StructureType type, Long2ObjectMap<StructureStart> structureMap, BlockPos playerPos, int maxRange)
+    private void addStructuresWithinRange(StructureType type, IChunkGenerator<?> chunkGen, BlockPos playerPos, int maxRange)
     {
+        Long2ObjectMap<StructureStart> structureMap = chunkGen.getStructureReferenceToStartMap(type.getStructure());
+
         for (StructureStart start : structureMap.values())
         {
             if (start.getBoundingBox() != null && MiscUtils.isStructureWithinRange(start.getBoundingBox(), playerPos, maxRange))
             {
                 this.structures.put(type, StructureData.fromStructure(start));
-            }
-        }
-    }
-
-    private void addStructuresWithinRange(Long2ObjectMap<StructureStart> structureMap, BlockPos playerPos, int maxRange)
-    {
-        for (StructureStart start : structureMap.values())
-        {
-            List<StructurePiece> components = start.getComponents();
-
-            if (components.size() == 1 && MiscUtils.isStructureWithinRange(start.getBoundingBox(), playerPos, maxRange))
-            {
-                String id = StructureIO.getStructureComponentName(components.get(0));
-                StructureType type = StructureType.templeTypeFromComponentId(id);
-
-                if (type != null)
-                {
-                    this.structures.put(type, StructureData.fromStructure(start));
-                }
             }
         }
     }

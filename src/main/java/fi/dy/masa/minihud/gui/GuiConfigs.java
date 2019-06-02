@@ -8,6 +8,7 @@ import fi.dy.masa.malilib.config.ConfigType;
 import fi.dy.masa.malilib.config.ConfigUtils;
 import fi.dy.masa.malilib.config.IConfigBase;
 import fi.dy.masa.malilib.gui.GuiConfigsBase;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
 import fi.dy.masa.minihud.Reference;
@@ -15,7 +16,6 @@ import fi.dy.masa.minihud.config.Configs;
 import fi.dy.masa.minihud.config.InfoToggle;
 import fi.dy.masa.minihud.config.RendererToggle;
 import fi.dy.masa.minihud.config.StructureToggle;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 
 public class GuiConfigs extends GuiConfigsBase
@@ -34,7 +34,7 @@ public class GuiConfigs extends GuiConfigsBase
     {
         if (GuiConfigs.tab == ConfigGuiTab.SHAPES)
         {
-            Minecraft.getInstance().displayGuiScreen(new GuiShapeManager());
+            this.mc.displayGuiScreen(new GuiShapeManager());
             return;
         }
 
@@ -47,7 +47,7 @@ public class GuiConfigs extends GuiConfigsBase
 
         for (ConfigGuiTab tab : ConfigGuiTab.values())
         {
-            int width = this.mc.fontRenderer.getStringWidth(tab.getDisplayName()) + 10;
+            int width = this.getStringWidth(tab.getDisplayName()) + 10;
 
             if (x >= this.width - width - 10)
             {
@@ -72,7 +72,7 @@ public class GuiConfigs extends GuiConfigsBase
     private int createButton(int x, int y, int width, ConfigGuiTab tab)
     {
         ButtonGeneric button = new ButtonGeneric(x, y, width, 20, tab.getDisplayName());
-        button.enabled = GuiConfigs.tab != tab;
+        button.setEnabled(GuiConfigs.tab != tab);
         this.addButton(button, new ButtonListenerConfigTabs(tab, this));
 
         return button.getWidth() + 2;
@@ -149,7 +149,7 @@ public class GuiConfigs extends GuiConfigsBase
         return ConfigOptionWrapper.createFor(configs);
     }
 
-    private static class ButtonListenerConfigTabs implements IButtonActionListener<ButtonGeneric>
+    private static class ButtonListenerConfigTabs implements IButtonActionListener
     {
         private final GuiConfigs parent;
         private final ConfigGuiTab tab;
@@ -161,18 +161,13 @@ public class GuiConfigs extends GuiConfigsBase
         }
 
         @Override
-        public void actionPerformed(ButtonGeneric control)
-        {
-        }
-
-        @Override
-        public void actionPerformedWithButton(ButtonGeneric control, int mouseButton)
+        public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
             GuiConfigs.tab = this.tab;
 
             if (this.tab == ConfigGuiTab.SHAPES)
             {
-                Minecraft.getInstance().displayGuiScreen(new GuiShapeManager());
+                this.parent.mc.displayGuiScreen(new GuiShapeManager());
             }
             else
             {

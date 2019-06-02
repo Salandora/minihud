@@ -2,7 +2,7 @@ package fi.dy.masa.minihud.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.malilib.util.Constants;
@@ -10,10 +10,11 @@ import fi.dy.masa.minihud.MiniHUD;
 import net.minecraft.nbt.INBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.world.gen.feature.structure.StructurePiece;
 import net.minecraft.world.gen.feature.structure.StructureStart;
+
+import javax.annotation.Nullable;
 
 public class StructureData
 {
@@ -61,7 +62,7 @@ public class StructureData
         return new StructureData(structure.getBoundingBox(), builder.build());
     }
 
-    @Nullable
+/*    @Nullable
     public static void readAndAddStructuresToMap(ArrayListMultimap<StructureType, StructureData> map, NBTTagCompound rootCompound, StructureType type)
     {
         if (rootCompound.contains("data", Constants.NBT.TAG_COMPOUND))
@@ -156,7 +157,7 @@ public class StructureData
                 }
             }
         }
-    }
+    }*/
 
     public static void readStructureDataCarpetAllBoxes(ArrayListMultimap<StructureType, StructureData> map, NBTTagList tagList)
     {

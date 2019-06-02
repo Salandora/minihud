@@ -2,6 +2,7 @@ package fi.dy.masa.minihud.gui.widgets;
 
 import java.util.List;
 import fi.dy.masa.malilib.gui.GuiBase;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.ButtonOnOff;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
@@ -10,7 +11,6 @@ import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.minihud.gui.GuiShapeEditor;
 import fi.dy.masa.minihud.renderer.shapes.ShapeBase;
 import fi.dy.masa.minihud.renderer.shapes.ShapeManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.resources.I18n;
@@ -20,18 +20,16 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
     private final WidgetListShapes parent;
     private final ShapeBase shape;
     private final List<String> hoverLines;
-    private final Minecraft mc;
     private final boolean isOdd;
     private final int buttonsStartX;
 
-    public WidgetShapeEntry(int x, int y, int width, int height, float zLevel, boolean isOdd,
-            ShapeBase shape, int listIndex, WidgetListShapes parent, Minecraft mc)
+    public WidgetShapeEntry(int x, int y, int width, int height, boolean isOdd,
+            ShapeBase shape, int listIndex, WidgetListShapes parent)
     {
-        super(x, y, width, height, zLevel, shape, listIndex);
+        super(x, y, width, height, shape, listIndex);
 
         this.shape = shape;
         this.hoverLines = shape.getWidgetHoverLines();
-        this.mc = mc;
         this.isOdd = isOdd;
         this.parent = parent;
         y += 1;
@@ -47,9 +45,7 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
 
     protected int addButton(int x, int y, ButtonListener.Type type)
     {
-        ButtonGeneric button = new ButtonGeneric(x, y, -1, 20, type.getDisplayName());
-        button.x -= button.getWidth();
-
+        ButtonGeneric button = new ButtonGeneric(x, y, -1, true, type.getDisplayName());
         this.addButton(button, new ButtonListener(type, this));
 
         return button.getWidth() + 1;
@@ -57,8 +53,7 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
 
     private int createButtonOnOff(int xRight, int y, boolean isCurrentlyOn, ButtonListener.Type type)
     {
-        ButtonOnOff button = ButtonOnOff.createOnOff(xRight, y, -1, true, type.getTranslationKey(), isCurrentlyOn);
-        xRight -= button.getWidth();
+        ButtonOnOff button = new ButtonOnOff(xRight, y, -1, true, type.getTranslationKey(), isCurrentlyOn);
         this.addButton(button, new ButtonListener(type, this));
 
         return button.getWidth() + 2;
@@ -67,7 +62,7 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
     @Override
     public void render(int mouseX, int mouseY, boolean selected)
     {
-        GlStateManager.color4f(1, 1, 1, 1);
+        GlStateManager.color4f(1f, 1f, 1f, 1f);
 
         boolean shapeSelected = ShapeManager.INSTANCE.getSelectedShape() == this.entry;
 
@@ -92,9 +87,9 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
         }
 
         String name = this.shape.getType().getDisplayName();
-        this.mc.fontRenderer.drawString(name, this.x + 4, this.y + 7, 0xFFFFFFFF);
+        this.drawString(name, this.x + 4, this.y + 7, 0xFFFFFFFF);
 
-        GlStateManager.color4f(1, 1, 1, 1);
+        GlStateManager.color4f(1f, 1f, 1f, 1f);
         GlStateManager.disableBlend();
 
         super.render(mouseX, mouseY, selected);
@@ -114,7 +109,7 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
         }
     }
 
-    private static class ButtonListener implements IButtonActionListener<ButtonGeneric>
+    private static class ButtonListener implements IButtonActionListener
     {
         private final Type type;
         private final WidgetShapeEntry widget;
@@ -126,14 +121,13 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
         }
 
         @Override
-        public void actionPerformed(ButtonGeneric control)
+        public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
             if (this.type == Type.CONFIGURE)
             {
-                Minecraft mc = Minecraft.getInstance();
                 GuiShapeEditor gui = new GuiShapeEditor(this.widget.shape);
-                gui.setParent(mc.currentScreen);
-                mc.displayGuiScreen(gui);
+                gui.setParent(this.widget.mc.currentScreen);
+                this.widget.mc.displayGuiScreen(gui);
             }
             else if (this.type == Type.ENABLED)
             {
@@ -145,12 +139,6 @@ public class WidgetShapeEntry extends WidgetListEntryBase<ShapeBase>
                 ShapeManager.INSTANCE.removeShape(this.widget.shape);
                 this.widget.parent.refreshEntries();
             }
-        }
-
-        @Override
-        public void actionPerformedWithButton(ButtonGeneric control, int mouseButton)
-        {
-            this.actionPerformed(control);
         }
 
         public enum Type

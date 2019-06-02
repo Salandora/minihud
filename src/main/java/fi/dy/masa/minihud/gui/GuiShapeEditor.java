@@ -5,6 +5,7 @@ import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiRenderLayerEditBase;
 import fi.dy.masa.malilib.gui.GuiTextFieldDouble;
 import fi.dy.masa.malilib.gui.GuiTextFieldGeneric;
+import fi.dy.masa.malilib.gui.button.ButtonBase;
 import fi.dy.masa.malilib.gui.button.ButtonGeneric;
 import fi.dy.masa.malilib.gui.button.ConfigButtonOptionList;
 import fi.dy.masa.malilib.gui.button.IButtonActionListener;
@@ -17,7 +18,6 @@ import fi.dy.masa.malilib.util.PositionUtils;
 import fi.dy.masa.malilib.util.PositionUtils.CoordinateType;
 import fi.dy.masa.minihud.renderer.shapes.ShapeBase;
 import fi.dy.masa.minihud.renderer.shapes.ShapeDespawnSphere;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -66,11 +66,11 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
     private void createColorInput(int x, int y)
     {
         String label = I18n.format("minihud.gui.label.color");
-        int w = this.mc.fontRenderer.getStringWidth(label);
+        int w = this.getStringWidth(label);
         this.addLabel(x, y, w, 14, 0xFFFFFFFF, label);
         y += 12;
 
-        GuiTextFieldGeneric textField = new GuiTextFieldGeneric(x, y, 70, 17, this.mc.fontRenderer);
+        GuiTextFieldGeneric textField = new GuiTextFieldGeneric(x, y, 70, 17, this.textRenderer);
         textField.setMaxStringLength(12);
         textField.setText(String.format("#%08X", this.shape.getColor().intValue));
         this.addTextField(textField, new TextFieldListenerColor(this.shape));
@@ -96,16 +96,16 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
         GuiUtils.createVec3dInputsVertical(x, y, 120, shape.getCenter(), new DespawnSphereEditor(shape, this), true, this);
         y += 54;
 
-        ButtonGeneric button = ButtonGeneric.createGeneric(x + 11, y, -1, false, "malilib.gui.button.render_layers_gui.set_here");
+        ButtonGeneric button = new ButtonGeneric(x + 11, y, -1, false, "malilib.gui.button.render_layers_gui.set_here");
         this.addButton(button, new ButtonListenerDespawnSphere(shape, this));
         y += 30;
 
         String label = I18n.format("minihud.gui.label.margin_colon");
-        int w = this.mc.fontRenderer.getStringWidth(label);
+        int w = this.getStringWidth(label);
         this.addLabel(x + 12, y, w, 12, 0xFFFFFFFF, label);
         y += 12;
 
-        GuiTextFieldDouble txtField = new GuiTextFieldDouble(x + 12, y, 60, 16, this.mc.fontRenderer);
+        GuiTextFieldDouble txtField = new GuiTextFieldDouble(x + 12, y, 60, 16, this.textRenderer);
         txtField.setText(String.valueOf(shape.getMargin()));
         this.addTextField(txtField, new TextFieldListenerMargin(shape));
         y += 20;
@@ -128,7 +128,7 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
 
         for (BlockSnap val : BlockSnap.values())
         {
-            width = Math.max(width, this.mc.fontRenderer.getStringWidth(I18n.format("minihud.gui.label.block_snap", val.getDisplayName())) + 10);
+            width = Math.max(width, this.getStringWidth(I18n.format("minihud.gui.label.block_snap", val.getDisplayName())) + 10);
         }
 
         return width;
@@ -167,7 +167,7 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
         }
     }
 
-    private static class ButtonListenerDespawnSphere implements IButtonActionListener<ButtonGeneric>
+    private static class ButtonListenerDespawnSphere implements IButtonActionListener
     {
         private final GuiShapeEditor gui;
         private final ShapeDespawnSphere shape;
@@ -179,14 +179,9 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
         }
 
         @Override
-        public void actionPerformed(ButtonGeneric control)
+        public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
-        }
-
-        @Override
-        public void actionPerformedWithButton(ButtonGeneric control, int mouseButton)
-        {
-            EntityPlayer player = Minecraft.getInstance().player;
+            EntityPlayer player = this.gui.mc.player;
 
             if (player != null)
             {
@@ -196,7 +191,7 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
         }
     }
 
-    private static class ButtonListenerDespawnSphereBlockSnap implements IButtonActionListener<ConfigButtonOptionList>
+    private static class ButtonListenerDespawnSphereBlockSnap implements IButtonActionListener
     {
         private final GuiShapeEditor gui;
         private final ShapeDespawnSphere shape;
@@ -208,12 +203,7 @@ public class GuiShapeEditor extends GuiRenderLayerEditBase
         }
 
         @Override
-        public void actionPerformed(ConfigButtonOptionList control)
-        {
-        }
-
-        @Override
-        public void actionPerformedWithButton(ConfigButtonOptionList control, int mouseButton)
+        public void actionPerformedWithButton(ButtonBase button, int mouseButton)
         {
             this.shape.setBlockSnap((BlockSnap) this.gui.configBlockSnap.getOptionListValue());
         }

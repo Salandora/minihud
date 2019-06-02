@@ -9,6 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.dimension.OverworldDimension;
 
 public class OverlayRendererSpawnChunks extends OverlayRendererBase
 {
@@ -31,7 +32,7 @@ public class OverlayRendererSpawnChunks extends OverlayRendererBase
     {
         return this.toggle.getBooleanValue() &&
                 (this.toggle == RendererToggle.OVERLAY_SPAWN_CHUNK_OVERLAY_PLAYER ||
-                 (mc.world != null && mc.world.dimension.isSurfaceWorld() &&
+                 (mc.world != null && mc.world.dimension instanceof OverworldDimension &&
                   DataStorage.getInstance().isWorldSpawnKnown()));
     }
 

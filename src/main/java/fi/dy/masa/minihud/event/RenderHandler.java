@@ -182,10 +182,11 @@ public class RenderHandler implements IRenderer
     private void updateFps()
     {
         this.fpsCounter++;
+        long time = System.currentTimeMillis();
 
-        if (System.currentTimeMillis() >= (this.fpsUpdateTime + 1000L))
+        if (time >= (this.fpsUpdateTime + 1000L))
         {
-            this.fpsUpdateTime = System.currentTimeMillis();
+            this.fpsUpdateTime = time;
             this.fps = this.fpsCounter;
             this.fpsCounter = 0;
         }
@@ -309,8 +310,8 @@ public class RenderHandler implements IRenderer
         {
             try
             {
-                long timeDay = (int) world.getDayTime();
-                int day = (int) (timeDay / 24000) + 1;
+                long timeDay = world.getDayTime();
+                long day = (int) (timeDay / 24000) + 1;
                 // 1 tick = 3.6 seconds in MC (0.2777... seconds IRL)
                 int dayTicks = (int) (timeDay % 24000);
                 int hour = (int) ((dayTicks / 1000) + 6) % 24;
@@ -428,7 +429,7 @@ public class RenderHandler implements IRenderer
             if (InfoToggle.DIMENSION.getBooleanValue())
             {
                 int dimension = world.dimension.getType().getId();
-                str.append(String.format(String.format("%sDimensionType ID: %d", pre, dimension)));
+                str.append(String.format(String.format("%sDimType ID: %d", pre, dimension)));
             }
 
             this.addLine(str.toString());
@@ -579,18 +580,6 @@ public class RenderHandler implements IRenderer
         else if (type == InfoToggle.CHUNK_UPDATES)
         {
             this.addLine(String.format("Chunk updates: %d", RenderChunk.renderChunksUpdated));
-        }
-        else if (type == InfoToggle.CHUNK_UNLOAD_ORDER)
-        {
-            int bucket = MiscUtils.getChunkUnloadBucket(pos.getX() >> 4, pos.getZ() >> 4);
-            String str1 = String.format("Chunk unload bucket: %d", bucket);
-
-            if (Configs.Generic.CHUNK_UNLOAD_BUCKET_WITH_SIZE.getBooleanValue())
-            {
-                str1 += String.format(" - Hash size: %d", MiscUtils.getDroppedChunksHashSize());
-            }
-
-            this.addLine(str1);
         }
         else if (type == InfoToggle.LOADED_CHUNKS_COUNT)
         {

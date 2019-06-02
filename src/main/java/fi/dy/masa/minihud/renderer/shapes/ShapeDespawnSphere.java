@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -43,11 +42,9 @@ public class ShapeDespawnSphere extends ShapeBase
     {
         super(ShapeTypes.DESPAWN_SPHERE, Configs.Colors.DESPAWN_SPHERE_OVERLAY_COLOR.getColor());
 
-        EntityPlayer player = Minecraft.getInstance().player;
-
-        if (player != null)
+        if (this.mc.player != null)
         {
-            this.setCenter(player.getPositionVector());
+            this.setCenter(this.mc.player.getPositionVector());
         }
         else
         {

@@ -1,19 +1,9 @@
 package fi.dy.masa.minihud.util;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Random;
-import fi.dy.masa.minihud.MiniHUD;
-import java.util.Set;
-import fi.dy.masa.malilib.util.WorldUtils;
-import fi.dy.masa.minihud.config.Configs;
-import net.minecraft.client.Minecraft;
+import javax.annotation.Nullable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MutableBoundingBox;
-import net.minecraft.util.text.ChatType;
-import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.WorldServer;
 
 public class MiscUtils
 {
@@ -41,102 +31,10 @@ public class MiscUtils
         return RAND.nextInt(10) == 0;
     }
 
-    public static int getDroppedChunksHashSize()
+    public static boolean isStructureWithinRange(@Nullable MutableBoundingBox bb, BlockPos playerPos, int maxRange)
     {
-        int size = Configs.Generic.DROPPED_CHUNKS_HASH_SIZE.getIntegerValue();
-
-        if (size > 0)
-        {
-            return size;
-        }
-
-        Minecraft mc = Minecraft.getInstance();
-
-        if (mc.isSingleplayer())
-        {
-            return getCurrentHashSize(mc.getIntegratedServer().getWorld(mc.player.getEntityWorld().dimension.getType()));
-        }
-        else
-        {
-            return 0xFFFF;
-        }
-    }
-
-    public static int getChunkUnloadBucket(int chunkX, int chunkZ)
-    {
-        if (Configs.Generic.CHUNK_UNLOAD_BUCKET_WITH_SIZE.getBooleanValue())
-        {
-            return getChunkOrder(chunkX, chunkZ, getDroppedChunksHashSize());
-        }
-        // The old simple calculation, without knowledge of the HashSet size
-        else
-        {
-            int longHash = Long.valueOf(ChunkPos.asLong(chunkX, chunkZ)).hashCode();
-            return (longHash ^ (longHash >>> 16)) & 0xFFFF;
-        }
-    }
-
-    /**
-     * This method has been taken from the Carpet mod, by gnembon
-     */
-    public static int getCurrentHashSize(WorldServer server)
-    {
-        /*
-        IMixinChunkProviderServer provider = (IMixinChunkProviderServer) (Object) server.getChunkProvider();
-
-        try
-        {
-            LongSet droppedChunks = provider.getDroppedChunks();
-            Field field = droppedChunks.getClass().getDeclaredField("map");
-            field.setAccessible(true);
-
-            @SuppressWarnings("unchecked")
-            HashMap<Object, Object> map = (HashMap<Object, Object>) field.get(droppedChunks);
-            field = map.getClass().getDeclaredField("table");
-            field.setAccessible(true);
-
-            Object[] table = (Object []) field.get(map);
-
-            if (table == null)
-            {
-                return 2;
-            }
-
-            return table.length;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        */
-
-        // FIXME 1.13
-        return 1;
-    }
-
-
-    /**
-     * This method has been taken from the Carpet mod, by gnembon
-     */
-    public static int getChunkOrder(int chunkX, int chunkZ, int hashSize)
-    {
-        try
-        {
-            Method method = HashMap.class.getDeclaredMethod("hash", Object.class);
-            method.setAccessible(true);
-
-            return (Integer) method.invoke(null, Long.hashCode(ChunkPos.asLong(chunkX, chunkZ))) & (hashSize - 1);
-        }
-        catch (Exception e)
-        {
-            MiniHUD.logger.error("Error while trying to get the chunk unload order");
-            return -1;
-        }
-    }
-
-    public static boolean isStructureWithinRange(MutableBoundingBox bb, BlockPos playerPos, int maxRange)
-    {
-        if (playerPos.getX() < (bb.minX - maxRange) ||
+        if (bb == null ||
+            playerPos.getX() < (bb.minX - maxRange) ||
             playerPos.getX() > (bb.maxX + maxRange) ||
             playerPos.getZ() < (bb.minZ - maxRange) ||
             playerPos.getZ() > (bb.maxZ + maxRange))

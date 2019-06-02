@@ -416,10 +416,12 @@ public class OverlayRendererLightLevel
         {
             Block block = state.getBlock();
             boolean spawnable = block != Blocks.BEDROCK && block != Blocks.BARRIER;
+            IBlockState state1 = chunk.getBlockState(x, y    , z);
+            IBlockState state2 = chunk.getBlockState(x, y + 1, z);
 
             return spawnable &&
-                   WorldEntitySpawner.isValidEmptySpawnBlock(chunk.getBlockState(x, y, z), chunk.getFluidState(x, y, z)) &&
-                   WorldEntitySpawner.isValidEmptySpawnBlock(chunk.getBlockState(x, y + 1, z), chunk.getFluidState(x, y + 1, z));
+                   WorldEntitySpawner.isValidEmptySpawnBlock(state1, state1.getFluidState()) &&
+                   WorldEntitySpawner.isValidEmptySpawnBlock(state2, state2.getFluidState());
         }
     }
 
