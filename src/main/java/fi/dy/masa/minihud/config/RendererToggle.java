@@ -3,7 +3,8 @@ package fi.dy.masa.minihud.config;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.config.ConfigType;
-import fi.dy.masa.malilib.config.IHotkeyTogglable;
+import fi.dy.masa.malilib.config.options.IConfigBoolean;
+import fi.dy.masa.malilib.hotkeys.IHotkey;
 import fi.dy.masa.malilib.hotkeys.IKeybind;
 import fi.dy.masa.malilib.hotkeys.KeybindMulti;
 import fi.dy.masa.malilib.hotkeys.KeybindSettings;
@@ -12,7 +13,7 @@ import fi.dy.masa.minihud.hotkeys.KeyCallbackToggleDebugRenderer;
 import fi.dy.masa.minihud.hotkeys.KeyCallbackToggleRenderer;
 import fi.dy.masa.minihud.hotkeys.KeyCallbackToggleStructures;
 
-public enum RendererToggle implements IHotkeyTogglable
+public enum RendererToggle implements IConfigBoolean, IHotkey
 {
     DEBUG_COLLISION_BOXES               ("debugCollisionBoxEnabled",    "", "Toggles the vanilla Block Collision Boxes debug renderer", "Block Collision Boxes"),
     DEBUG_HEIGHT_MAP                    ("debugHeightMapEnabled",       "", "Toggles the vanilla Height Map debug renderer", "Height Map"),
@@ -41,6 +42,7 @@ public enum RendererToggle implements IHotkeyTogglable
     private final IKeybind keybind;
     private final boolean defaultValueBoolean;
     private boolean valueBoolean;
+    private boolean lastSavedValueBoolean;
 
     RendererToggle(String name, String defaultHotkey, String comment, String prettyName)
     {
@@ -67,6 +69,8 @@ public enum RendererToggle implements IHotkeyTogglable
         {
             this.keybind.setCallback(new KeyCallbackToggleRenderer(this));
         }
+
+        this.cacheSavedValue();
     }
 
     @Override
@@ -142,6 +146,19 @@ public enum RendererToggle implements IHotkeyTogglable
     }
 
     @Override
+    public boolean isDirty()
+    {
+        return this.lastSavedValueBoolean != this.valueBoolean || this.keybind.isDirty();
+    }
+
+    @Override
+    public void cacheSavedValue()
+    {
+        this.lastSavedValueBoolean = this.valueBoolean;
+        this.keybind.cacheSavedValue();
+    }
+
+    @Override
     public void resetToDefault()
     {
         this.valueBoolean = this.defaultValueBoolean;
@@ -161,7 +178,7 @@ public enum RendererToggle implements IHotkeyTogglable
     }
 
     @Override
-    public void setValueFromJsonElement(JsonElement element)
+    public void setValueFromJsonElement(JsonElement element, String configName)
     {
         try
         {
@@ -171,13 +188,15 @@ public enum RendererToggle implements IHotkeyTogglable
             }
             else
             {
-                MiniHUD.logger.warn("Failed to read config value for {} from the JSON config", this.getName());
+                MiniHUD.logger.warn("Failed to read config value for {} from the JSON config", configName);
             }
         }
         catch (Exception e)
         {
-            MiniHUD.logger.warn("Failed to read config value for {} from the JSON config", this.getName(), e);
+            MiniHUD.logger.warn("Failed to read config value for {} from the JSON config", configName, e);
         }
+
+        this.cacheSavedValue();
     }
 
     @Override

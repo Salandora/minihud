@@ -7,11 +7,11 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import fi.dy.masa.malilib.config.HudAlignment;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.interfaces.IRenderer;
 import fi.dy.masa.malilib.render.RenderUtils;
 import fi.dy.masa.malilib.util.BlockUtils;
+import fi.dy.masa.malilib.util.HudAlignment;
 import fi.dy.masa.malilib.util.StringUtils;
 import fi.dy.masa.malilib.util.WorldUtils;
 import fi.dy.masa.minihud.config.Configs;
@@ -308,7 +308,7 @@ public class RenderHandler implements IRenderer
             try
             {
                 long timeDay = world.getDayTime();
-                long day = (int) (timeDay / 24000) + 1;
+                long day = (int) (timeDay / 24000);
                 // 1 tick = 3.6 seconds in MC (0.2777... seconds IRL)
                 int dayTicks = (int) (timeDay % 24000);
                 int hour = (int) ((dayTicks / 1000) + 6) % 24;
@@ -317,6 +317,7 @@ public class RenderHandler implements IRenderer
 
                 String str = Configs.Generic.DATE_FORMAT_MINECRAFT.getStringValue();
                 str = str.replace("{DAY}",  String.format("%d", day));
+                str = str.replace("{DAY_1}",String.format("%d", day + 1));
                 str = str.replace("{HOUR}", String.format("%02d", hour));
                 str = str.replace("{MIN}",  String.format("%02d", min));
                 str = str.replace("{SEC}",  String.format("%02d", sec));
