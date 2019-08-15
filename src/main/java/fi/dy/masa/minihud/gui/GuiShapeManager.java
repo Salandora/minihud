@@ -1,7 +1,6 @@
 package fi.dy.masa.minihud.gui;
 
 import javax.annotation.Nullable;
-import org.lwjgl.input.Keyboard;
 import fi.dy.masa.malilib.gui.GuiBase;
 import fi.dy.masa.malilib.gui.GuiListBase;
 import fi.dy.masa.malilib.gui.button.ButtonBase;
@@ -48,7 +47,7 @@ public class GuiShapeManager extends GuiListBase<ShapeBase, WidgetShapeEntry, Wi
         this.clearButtons();
         this.createTabButtons();
 
-        Keyboard.enableRepeatEvents(true);
+        this.mc.keyboardListener.enableRepeatEvents(true);
     }
 
     protected void createTabButtons()
