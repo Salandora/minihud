@@ -39,8 +39,9 @@ public enum RendererToggle implements IConfigBoolean, IHotkey
     private final String name;
     private final String prettyName;
     private final String comment;
-    private final IKeybind keybind;
+    private final KeybindMulti keybind;
     private final boolean defaultValueBoolean;
+    private String modName = "";
     private boolean valueBoolean;
     private boolean lastSavedValueBoolean;
 
@@ -55,7 +56,7 @@ public enum RendererToggle implements IConfigBoolean, IHotkey
         this.prettyName = prettyName;
         this.comment = comment;
         this.defaultValueBoolean = false;
-        this.keybind = KeybindMulti.fromStorageString(defaultHotkey, settings);
+        this.keybind = KeybindMulti.fromStorageString(name, defaultHotkey, settings);
 
         if (name.equals("overlayStructureMainToggle"))
         {
@@ -107,6 +108,19 @@ public enum RendererToggle implements IConfigBoolean, IHotkey
     public String getComment()
     {
         return comment != null ? this.comment : "";
+    }
+
+    @Override
+    public String getModName()
+    {
+        return this.modName;
+    }
+
+    @Override
+    public void setModName(String modName)
+    {
+        this.modName = modName;
+        this.keybind.setModName(modName);
     }
 
     @Override

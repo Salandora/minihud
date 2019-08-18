@@ -119,20 +119,22 @@ public class DataStorage
         }
         else if (this.mc.isSingleplayer())
         {
-            MinecraftServer server = this.mc.getIntegratedServer();
-            World worldTmp = server.getWorld(dimension);
-            return worldTmp != null;
+            return this.mc.getIntegratedServer().getWorld(dimension) != null;
         }
 
         return false;
+    }
+
+    public boolean hasStoredWorldSeed()
+    {
+        return this.worldSeedValid;
     }
 
     public long getWorldSeed(DimensionType dimension)
     {
         if (this.worldSeedValid == false && this.mc.isSingleplayer())
         {
-            MinecraftServer server = this.mc.getIntegratedServer();
-            World worldTmp = server.getWorld(dimension);
+            World worldTmp = this.mc.getIntegratedServer().getWorld(dimension);
 
             if (worldTmp != null)
             {
@@ -452,7 +454,14 @@ public class DataStorage
             }
             else if (this.structuresNeedUpdating(playerPos, 256))
             {
-                this.requestStructureDataFromServer();
+                if (this.hasStructureDataFromServer == false)
+                {
+                    this.updateStructureDataFromNBTFiles(playerPos);
+                }
+                else
+                {
+                    StructureToggle.updateStructureData();
+                }
             }
         }
     }
@@ -496,6 +505,45 @@ public class DataStorage
         }
 
         this.lastStructureUpdatePos = playerPos;
+        this.structuresNeedUpdating = false;
+    }
+
+    private void updateStructureDataFromNBTFiles(final BlockPos playerPos)
+    {
+        synchronized (this.structures)
+        {
+            this.structures.clear();
+
+            File dir = this.getLocalStructureFileDirectory();
+
+            if (dir != null && dir.exists() && dir.isDirectory())
+            {
+                for (StructureType type : StructureType.values())
+                {
+                    if (type.isTemple() == false)
+                    {
+                        NBTTagCompound nbt = FileUtils.readNBTFile(new File(dir, type.getStructureName() + ".dat"));
+
+                        if (nbt != null)
+                        {
+                            StructureData.readAndAddStructuresToMap(this.structures, nbt, type);
+                        }
+                    }
+                }
+
+                NBTTagCompound nbt = FileUtils.readNBTFile(new File(dir, "Temple.dat"));
+
+                if (nbt != null)
+                {
+                    StructureData.readAndAddTemplesToMap(this.structures, nbt);
+                }
+
+                LiteModMiniHud.logger.info("Structure data updated from local structure files, structures: {}", this.structures.size());
+            }
+        }
+
+        this.lastStructureUpdatePos = playerPos;
+        this.structuresDirty = true;
         this.structuresNeedUpdating = false;
     }
 
@@ -675,6 +723,11 @@ public class DataStorage
 
         obj.add("distance_pos", JsonUtils.vec3dToJson(this.distanceReferencePoint));
 
+        if (this.worldSeedValid)
+        {
+            obj.add("seed", new JsonPrimitive(this.worldSeed));
+        }
+
         return obj;
     }
 
@@ -689,6 +742,12 @@ public class DataStorage
         else
         {
             this.distanceReferencePoint = Vec3d.ZERO;
+        }
+
+        if (JsonUtils.hasLong(obj, "seed"))
+        {
+            this.worldSeed = JsonUtils.getLong(obj, "seed");
+            this.worldSeedValid = true;
         }
     }
 }

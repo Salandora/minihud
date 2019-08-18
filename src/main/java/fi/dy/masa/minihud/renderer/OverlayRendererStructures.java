@@ -19,6 +19,13 @@ import net.minecraft.world.dimension.DimensionType;
 
 public class OverlayRendererStructures extends OverlayRendererBase
 {
+    public static OverlayRendererStructures instance;
+
+    public OverlayRendererStructures()
+    {
+        instance = this;
+    }
+
     @Override
     public boolean shouldRender(Minecraft mc)
     {
