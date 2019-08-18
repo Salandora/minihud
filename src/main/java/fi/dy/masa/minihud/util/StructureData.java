@@ -6,9 +6,9 @@ import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import fi.dy.masa.minihud.MiniHUD;
+import fi.dy.masa.malilib.util.IntBoundingBox;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import fi.dy.masa.malilib.util.IntBoundingBox;
 import net.minecraft.world.gen.feature.structure.StructurePiece;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 

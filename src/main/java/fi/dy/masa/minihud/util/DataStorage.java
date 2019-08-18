@@ -12,9 +12,11 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import fi.dy.masa.malilib.util.*;
 import fi.dy.masa.minihud.MiniHUD;
 import fi.dy.masa.minihud.Reference;
+import fi.dy.masa.minihud.config.StructureToggle;
 import fi.dy.masa.minihud.network.CarpetPluginChannel;
 import fi.dy.masa.minihud.renderer.OverlayRendererLightLevel;
 import fi.dy.masa.minihud.renderer.OverlayRendererSpawnableColumnHeights;
@@ -456,11 +458,12 @@ public class DataStorage
             {
                 if (this.hasStructureDataFromServer == false)
                 {
-                    this.updateStructureDataFromNBTFiles(playerPos);
+                    //this.updateStructureDataFromNBTFiles(playerPos);
                 }
                 else
                 {
-                    StructureToggle.updateStructureData();
+                    this.requestStructureDataFromServer();
+                    //StructureToggle.updateStructureData();
                 }
             }
         }
@@ -508,6 +511,7 @@ public class DataStorage
         this.structuresNeedUpdating = false;
     }
 
+    /*
     private void updateStructureDataFromNBTFiles(final BlockPos playerPos)
     {
         synchronized (this.structures)
@@ -520,7 +524,7 @@ public class DataStorage
             {
                 for (StructureType type : StructureType.values())
                 {
-                    if (type.isTemple() == false)
+                    if (type.getStructure() == StructureType.JUNGLE_TEMPLE)
                     {
                         NBTTagCompound nbt = FileUtils.readNBTFile(new File(dir, type.getStructureName() + ".dat"));
 
@@ -546,6 +550,7 @@ public class DataStorage
         this.structuresDirty = true;
         this.structuresNeedUpdating = false;
     }
+    */
 
     public void updateStructureDataFromServer(PacketBuffer data)
     {
