@@ -28,7 +28,9 @@ public class PluginChannelRegister extends Message {
         StringBuilder channelList = new StringBuilder();
 
         //channelList.append("\u0000");
-        channelList.append(MiniHUD.CARPET_CHANNEL_NAME);
+        channelList.append(MiniHUD.CHANNEL_CARPET_CLIENT_OLD);
+        channelList.append("\u0000");
+        channelList.append(MiniHUD.CHANNEL_CARPET_CLIENT_NEW);
 
         buffer.writeBytes(channelList.toString().getBytes(Charsets.UTF_8));
     }

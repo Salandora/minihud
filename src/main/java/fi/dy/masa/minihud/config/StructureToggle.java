@@ -7,8 +7,6 @@ import fi.dy.masa.malilib.config.options.ConfigHotkey;
 import fi.dy.masa.malilib.config.options.IConfigBoolean;
 import fi.dy.masa.malilib.hotkeys.IHotkey;
 import fi.dy.masa.malilib.interfaces.IValueChangeCallback;
-import fi.dy.masa.minihud.MiniHUD;
-import fi.dy.masa.minihud.network.CarpetPluginChannel;
 import fi.dy.masa.minihud.util.DataStorage;
 
 public enum StructureToggle
@@ -98,6 +96,41 @@ public enum StructureToggle
 
         return builder.build();
     }
+
+/*
+    public static void updateStructureData()
+    {
+        if (Minecraft.getMinecraft().isSingleplayer() == false)
+        {
+            PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+            data.writeInt(DataStorage.CARPET_ID_BOUNDINGBOX_MARKERS);
+            ClientPluginChannels.sendMessage(LiteModMiniHud.CHANNEL_CARPET_CLIENT, data, ChannelPolicy.DISPATCH_ALWAYS);
+            LiteModMiniHud.logger.info("Requesting structure data from Carpet server");
+        }
+
+        DataStorage.getInstance().setStructuresNeedUpdating();
+    }
+    public static void updateStructureData()
+    {
+        Minecraft mc = Minecraft.getMinecraft();
+
+        if (mc.isSingleplayer() == false)
+        {
+            // Request the data using both the old and the new protocol/channel name
+            PacketBuffer data = new PacketBuffer(Unpooled.buffer());
+            data.writeInt(DataStorage.CARPET_ID_BOUNDINGBOX_MARKERS);
+            ClientPluginChannels.sendMessage(LiteModMiniHud.CHANNEL_CARPET_CLIENT_OLD, data, ChannelPolicy.DISPATCH_ALWAYS);
+
+            data = new PacketBuffer(Unpooled.buffer());
+            data.writeInt(DataStorage.CARPET_ID_BOUNDINGBOX_MARKERS);
+            PacketSplitter.send(mc.getConnection(), new ResourceLocation(LiteModMiniHud.CHANNEL_CARPET_CLIENT_NEW), data);
+
+            LiteModMiniHud.logger.info("Requesting structure data from Carpet server");
+        }
+
+        DataStorage.getInstance().setStructuresNeedUpdating();
+    }
+*/
 
     public static class StructureRefresh implements IValueChangeCallback<ConfigBoolean>
     {

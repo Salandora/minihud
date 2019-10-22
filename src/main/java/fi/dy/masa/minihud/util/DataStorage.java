@@ -397,7 +397,7 @@ public class DataStorage
 
     public void updateIntegratedServerTPS()
     {
-        if (this.mc != null && this.mc.player != null && this.mc.getIntegratedServer() != null)
+        if (this.mc != null && this.mc.getIntegratedServer() != null)
         {
             this.serverMSPT = (double) MathHelper.average(this.mc.getIntegratedServer().tickTimeArray) / 1000000D;
             this.serverTPS = this.serverMSPT <= 50 ? 20D : (1000D / this.serverMSPT);
@@ -542,17 +542,20 @@ public class DataStorage
                     StructureData.readAndAddTemplesToMap(this.structures, nbt);
                 }
 
+                if (this.structures.size() > 0)
+                {
+                    this.lastStructureUpdatePos = playerPos;
+                    this.structuresDirty = true;
+                    this.structuresNeedUpdating = false;
+                }
+
                 LiteModMiniHud.logger.info("Structure data updated from local structure files, structures: {}", this.structures.size());
             }
         }
-
-        this.lastStructureUpdatePos = playerPos;
-        this.structuresDirty = true;
-        this.structuresNeedUpdating = false;
     }
     */
 
-    public void updateStructureDataFromServer(PacketBuffer data)
+    public void updateStructureDataFromCarpetServer(PacketBuffer data)
     {
         try
         {
